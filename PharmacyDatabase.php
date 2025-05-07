@@ -17,6 +17,7 @@ class PharmacyDatabase {
         if ($this->connection->connect_error) {
             die("Connection failed: " . $this->connection->connect_error);
         }
+        
     }
 
     // Add or update user
@@ -105,9 +106,53 @@ class PharmacyDatabase {
         echo "Medication added successfully";
     }
 
+    public function getUserDetails($userId) {
+        $userId = (int)$userId;
+    
+        $query = "
+            SELECT u.id, u.name, u.email, u.user_type,
+                   p.id AS prescription_id, p.medication, p.dosage, p.date_prescribed
+            FROM users u
+            LEFT JOIN prescriptions p ON u.id = p.user_id
+            WHERE u.id = $userId
+        ";
+    
+        $result = $this->connection->query($query);
+    
+        $userDetails = [];
+        $prescriptions = [];
+    
+        while ($row = $result->fetch_assoc()) {
+            // Set user info one time
+            if (empty($userDetails)) {
+                $userDetails = [
+                    'id' => $row['id'],
+                    'name' => $row['name'],
+                    'email' => $row['email'],
+                    'user_type' => $row['user_type'],
+                    'prescriptions' => []
+                ];
+            }
+    
+            // Add prescription if there is one
+            if (!empty($row['prescription_id'])) {
+                $userDetails['prescriptions'][] = [
+                    'id' => $row['prescription_id'],
+                    'medication' => $row['medication'],
+                    'dosage' => $row['dosage'],
+                    'date_prescribed' => $row['date_prescribed']
+                ];
+            }
+        }
+    
+        return $userDetails;
+    }
+
+
     // Close the connection
     public function close() {
         $this->connection->close();
     }
 }
 ?>
+
