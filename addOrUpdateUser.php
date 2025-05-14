@@ -30,7 +30,7 @@
         <input type="text" name="username" required><br><br>
 
         <label>Contact Info:</label>
-        <input type="text" name="contact_info" required><br><br>
+        <input type="text" name="contactInfo" required><br><br>
 
         <label>User Type:</label>
         <select name="user_type" required>
@@ -52,3 +52,4 @@
     </footer>
 </body>
 </html>
+
