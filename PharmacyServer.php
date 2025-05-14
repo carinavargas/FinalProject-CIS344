@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once 'PharmacyDatabase.php';
 
 class PharmacyPortal {
@@ -12,14 +13,23 @@ class PharmacyPortal {
         $action = $_GET['action'] ?? 'home';
 
         switch ($action) {
+            case 'login':
+                $this->login();
+                break;
+            case 'register':
+                $this->registerPatient();
+                break;
             case 'addPrescription':
                 $this->addPrescription();
                 break;
+            case 'viewPatientPrescriptions':
+                $this->viewPatientPrescriptions();
+                break;
+            case 'viewAllPrescriptions':
+                $this->viewAllPrescriptions();
+                break;
             case 'addMedication':
-                    $this->addMedication();
-                    break;
-            case 'viewPrescriptions':
-                $this->viewPrescriptions();
+                $this->addMedication();
                 break;
             case 'viewInventory':
                 $this->viewInventory();
@@ -29,15 +39,68 @@ class PharmacyPortal {
                 break;
             case 'addOrUpdateUser':
                 $this->addOrUpdateUser();
-                break;     
-            case 'logout':               
+                break;
+            case 'logout':
+                $this->logout();
+                break;
+
             default:
                 $this->home();
         }
     }
 
     private function home() {
+        // Home page view 
         include 'home.php';
+    }
+
+    private function login() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $username = $_POST['username'];
+            $password = $_POST['password'];
+
+            // Verify user credentials
+            $user = $this->db->verifyUserCredentials($username, $password);
+            if ($user) {
+                $_SESSION['userId'] = $user['userId'];
+                $_SESSION['username'] = $username;
+                $_SESSION['userType'] = $user['userType'];
+                $_SESSION['message'] = 'Login successful!';
+                header("Location: pharmacyServer.php?action=home");
+                exit();
+            } else {
+                $_SESSION['error'] = 'Invalid username or password.';
+                header("Location: pharmacyServer.php?action=login");
+            }
+        } else {
+            include 'login.php';
+        }
+    }
+
+    private function registerPatient() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $username = $_POST['username'];
+            $email = $_POST['email'];
+            $contactInfo = $_POST['contact_info'];
+            $password = $_POST['password'];
+
+            if ($this->db->userExists($username)) {
+                $_SESSION['error'] = 'Username already exists.';
+                header("Location: pharmacyServer.php?action=register");
+                return;
+            }
+
+            $success = $this->db->registerPatient($username, $email, $contactInfo, $password);
+            if ($success) {
+                $_SESSION['message'] = 'Registration successful! Please log in.';
+                header("Location: pharmacyServer.php?action=login");
+            } else {
+                $_SESSION['error'] = 'Failed to register user.';
+                header("Location: pharmacyServer.php?action=register");
+            }
+        } else {
+            include 'register.php';
+        }
     }
 
     private function addPrescription() {
@@ -48,21 +111,74 @@ class PharmacyPortal {
             $quantity = $_POST['quantity'];
 
             $this->db->addPrescription($patientUserName, $medicationId, $dosageInstructions, $quantity);
-            header("Location: ?action=viewPrescriptions&message=Prescription Added");
+            $_SESSION['message'] = 'Prescription added successfully.';
+            header("Location: pharmacyServer.php?action=viewAllPrescriptions");
         } else {
             include 'addPrescription.php';
         }
     }
 
-    private function viewPrescriptions() {
+    private function viewPatientPrescriptions() {
+        if ($_SESSION['userType'] !== 'patient') {
+            $_SESSION['error'] = 'Access denied.';
+            header("Location: pharmacyServer.php?action=home");
+            return;
+        }
+
+        $prescriptions = $this->db->getPrescriptionsByUser($_SESSION['userId']);
+        include 'viewPatientPrescriptions.php';
+    }
+
+    private function viewAllPrescriptions() {
+        if (!in_array($_SESSION['userType'], ['admin', 'pharmacist'])) {
+            $_SESSION['error'] = 'Access denied.';
+            header("Location: pharmacyServer.php?action=home");
+            return;
+        }
+
         $prescriptions = $this->db->getAllPrescriptions();
-        include 'viewPrescriptions.php';
+        include 'viewAllPrescriptions.php';
     }
 
     private function viewInventory() {
+        if ($_SESSION['userType'] !== 'pharmacist') {
+            $_SESSION['error'] = 'Access denied.';
+            header("Location: pharmacyServer.php?action=home");
+            return;
+        }
+
         $inventory = $this->db->getMedicationInventory();
         include 'viewInventory.php';
     }
+
+    public function addMedication() {
+        if (isset($_POST['medicationName'], $_POST['dosage'], $_POST['manufacturer'], $_POST['quantityAvailable'])) {
+            // Retrieve form data
+            $medicationName = $_POST['medicationName'];
+            $dosage = $_POST['dosage'];
+            $manufacturer = $_POST['manufacturer'];
+            $quantityAvailable = $_POST['quantityAvailable'];
+    
+    
+    
+            $medicationId = generateMedicationId(); 
+    
+            // Call the function to add/update medication
+            $db = new PharmacyDatabase();
+            $result = $db->addMedication($medicationId, $medicationName, $quantityAvailable, $dosage);
+    
+            if ($result) {
+                echo "Medication added/updated successfully!";
+            } else {
+                echo "Error adding medication.";
+            }
+        } else {
+            echo "Please fill in all required fields.";
+        }
+    }
+
+
+    
 
     private function addUser() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -71,44 +187,34 @@ class PharmacyPortal {
             $userType = $_POST['user_type'];
 
             $this->db->addUser($userName, $contactInfo, $userType);
-            header("Location: ?action=home&message=User Added");
+            $_SESSION['message'] = 'User added successfully.';
+            header("Location: pharmacyServer.php?action=home");
         } else {
             include 'addUser.php';
         }
     }
 
-    private function addMedication() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $medicationName = $_POST['medication_name'];
-            $dosage = $_POST['dosage'];
-            $manufacturer = $_POST['manufacturer'];
-    
-            $this->db->addMedication($medicationName, $dosage, $manufacturer);
-            header("Location:?action=viewInventory&message=Medication Added");
-        } else {
-            include 'addMedication.php';
-        }
-    }
     private function addOrUpdateUser() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $userId = $_POST['user_id'] ?? null;
             $userName = $_POST['username'];
             $contactInfo = $_POST['contact_info'];
             $userType = $_POST['user_type'];
-    
-            // Nullify empty userId to handle insert case
-            $userId = empty($userId) ? null : (int)$userId;
-    
+
             $this->db->addOrUpdateUser($userId, $userName, $contactInfo, $userType);
-            header("Location: ?action=home&message=User Saved");
+            $_SESSION['message'] = 'User saved successfully.';
+            header("Location: pharmacyServer.php?action=home");
         } else {
             include 'addOrUpdateUser.php';
         }
     }
-    
 
-
+    private function logout() {
+        session_destroy();
+        header("Location: pharmacyServer.php?action=home");
+    }
 }
+
 
 $portal = new PharmacyPortal();
 $portal->handleRequest();
