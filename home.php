@@ -1,60 +1,55 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once 'PharmacyDatabase.php';
+
+if (!isset($_SESSION['userId'])) {
+    header("Location: pharmacyServer.php?action=login");
+    exit();
+}
+
+$username = $_SESSION['username'];
+$userType = $_SESSION['userType'];
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pharmacy Portal Express</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        
-        <img src="logo.jpg" alt="Pharmacy Logo">
-        <h1>Pharmacy Portal</h1>
-        
-    
-        <a href="logout.php" class="cross-icon">&times;</a>
-    </header>
 
+<header>
+    <img src="logo.jpg" alt="Pharmacy Logo">
+    <h1>Pharmacy Portal</h1>
+    <a href="pharmacyServer.php?action=logout" class="cross-icon">&times;</a>
+</header>
 
+<main>
+    <h2>Welcome, <?php echo htmlspecialchars($username); ?> (<?php echo ucfirst($userType); ?>)</h2>
 
-<?php
-require_once 'PharmacyDatabase.php';
-require_once 'PharmacyServer.php';
+    <nav class="dashboard-nav">
+        <?php if ($userType === 'pharmacist'): ?>
+            <a href="pharmacyServer.php?action=addPrescription" class="nav-link">Add Prescription</a>
+            <a href="pharmacyServer.php?action=viewAllPrescriptions" class="nav-link">View All Prescriptions</a>
+            <a href="pharmacyServer.php?action=addOrUpdateUser" class="nav-link">Add or Update User</a>
+            <a href="pharmacyServer.php?action=viewInventory" class="nav-link">View Inventory</a>
+            <a href="pharmacyServer.php?action=addMedication" class="nav-link">Add Medication</a>
+           
+        <?php elseif ($userType === 'patient'): ?>
+            <a href="pharmacyServer.php?action=viewPatientPrescriptions" class="nav-link">View My Prescriptions</a>
+        <?php endif; ?>
 
-// instance of pharmacy database
-$db = new PharmacyDatabase();
-
-// Retrieve prescriptions (if needed)
-$prescriptions = $db->getAllPrescriptions();
-?>
-
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Pharmacy Portal Express</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <h1>Welcome to Pharmacy Portal Express</h1>
-    <nav>
-        <a href="?action=addPrescription" class="nav-link">Add Prescription</a>
-        <a href="?action=viewPrescriptions" class="nav-link">View Prescriptions</a>
-        <a href="?action=addOrUpdateUser" class="nav-link">Add or Update User</a>
-        <a href="?action=viewUserDetails" class="nav-link">View User Details</a>
-        <a href="?action=viewInventory" class="nav-link">View Inventory</a>
-        <a href="?action=addMedication" class="nav-link">Add Medication</a>
-
-
-        <br><br><br><br>
-        <a href="logout.php">Logout</a>
+        <a href="pharmacyServer.php?action=logout" class="nav-link logout">Logout</a>
     </nav>
-</body>
-</html>
-
+</main>
 
 <footer>
-        &copy; 2025 Pharmacy Portal. All Rights Reserved.
-    </footer>
+    &copy; 2025 Pharmacy Portal. All Rights Reserved.
+</footer>
+
 </body>
 </html>
