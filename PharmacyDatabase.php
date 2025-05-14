@@ -61,12 +61,13 @@ class PharmacyDatabase {
         $sql = "INSERT INTO medications (medicationName, dosage, manufacturer, quantityAvailable)
                 VALUES (?, ?, ?, ?)
                 ON DUPLICATE KEY UPDATE
-                    quantityAvailable = VALUES(quantityAvailable),
-                    dosage = VALUES(dosage),
-                    manufacturer = VALUES(manufacturer)";
+                    quantityAvailable = VALUES(quantityAvailable)";
+                    
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([$medicationName, $dosage, $manufacturer, $quantityAvailable]);
     }
+    
+    
     
     
     
@@ -111,6 +112,9 @@ class PharmacyDatabase {
         $stmt->execute([':userId' => $userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+
+
 
 
 }    
