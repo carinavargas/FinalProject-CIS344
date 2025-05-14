@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once 'PharmacyDatabase.php';
 
 class PharmacyPortal {
@@ -150,35 +149,40 @@ class PharmacyPortal {
         $inventory = $this->db->getMedicationInventory();
         include 'viewInventory.php';
     }
-
     public function addMedication() {
-        if (isset($_POST['medicationName'], $_POST['dosage'], $_POST['manufacturer'], $_POST['quantityAvailable'])) {
-            // Retrieve form data
-            $medicationName = $_POST['medicationName'];
-            $dosage = $_POST['dosage'];
-            $manufacturer = $_POST['manufacturer'];
-            $quantityAvailable = $_POST['quantityAvailable'];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (isset($_POST['medicationName'], $_POST['dosage'], $_POST['manufacturer'], $_POST['quantityAvailable'])) {
+                $medicationName = trim($_POST['medicationName']);
+                $dosage = trim($_POST['dosage']);
+                $manufacturer = trim($_POST['manufacturer']);
+                $quantityAvailable = (int)$_POST['quantityAvailable'];
     
+                if ($medicationName === '' || $dosage === '' || $quantityAvailable < 0) {
+                    $_SESSION['error'] = "Please fill in all required fields with valid data.";
+                } else {
+                    $result = $this->db->addMedication($medicationName, $dosage, $manufacturer, $quantityAvailable);
     
-    
-            $medicationId = generateMedicationId(); 
-    
-            // Call the function to add/update medication
-            $db = new PharmacyDatabase();
-            $result = $db->addMedication($medicationId, $medicationName, $quantityAvailable, $dosage);
-    
-            if ($result) {
-                echo "Medication added/updated successfully!";
+                    if ($result) {
+                        $_SESSION['message'] = "Medication added/updated successfully!";
+                        header("Location: pharmacyServer.php?action=viewInventory");
+                        exit();
+                    } else {
+                        $_SESSION['error'] = "Error adding medication.";
+                    }
+                }
             } else {
-                echo "Error adding medication.";
+                $_SESSION['error'] = "Please fill in all required fields.";
             }
+           
+            header("Location: pharmacyServer.php?action=addMedication");
+            exit();
         } else {
-            echo "Please fill in all required fields.";
+            include 'addMedication.php';  
         }
     }
-
-
     
+    
+
 
     private function addUser() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -219,3 +223,4 @@ class PharmacyPortal {
 $portal = new PharmacyPortal();
 $portal->handleRequest();
 ?>
+
