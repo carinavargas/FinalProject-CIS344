@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once 'PharmacyDatabase.php';
 
 class PharmacyPortal {
@@ -49,7 +50,7 @@ class PharmacyPortal {
     }
 
     private function home() {
-        // Home page view 
+        
         include 'home.php';
     }
 
@@ -58,7 +59,7 @@ class PharmacyPortal {
             $username = $_POST['username'];
             $password = $_POST['password'];
 
-            // Verify user credentials
+            
             $user = $this->db->verifyUserCredentials($username, $password);
             if ($user) {
                 $_SESSION['userId'] = $user['userId'];
@@ -223,4 +224,3 @@ class PharmacyPortal {
 $portal = new PharmacyPortal();
 $portal->handleRequest();
 ?>
-
