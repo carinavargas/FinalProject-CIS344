@@ -1,6 +1,7 @@
 <?php
 require_once 'PharmacyDatabase.php';
 
+
 if (!isset($_SESSION['userId']) || $_SESSION['userType'] !== 'patient') {
     header('Location: login.php');
     exit;
@@ -59,4 +60,3 @@ $prescriptions = $db->getPrescriptionsByUser($_SESSION['userId']);
     <a href="PharmacyServer.php">Back to Home</a>
 </body>
 </html>
-
