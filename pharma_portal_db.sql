@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 07, 2025 at 04:03 AM
+-- Generation Time: May 15, 2025 at 02:54 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -63,9 +63,9 @@ CREATE TABLE `inventory` (
 --
 
 INSERT INTO `inventory` (`inventoryId`, `medicationId`, `quantityAvailable`, `lastUpdated`) VALUES
-(1, 1, 50, '2025-05-06 21:48:41'),
-(2, 2, 30, '2025-05-06 21:48:41'),
-(3, 3, 20, '2025-05-06 21:48:41');
+(1, 1, 45, '2025-05-14 16:56:55'),
+(2, 2, -15, '2025-05-14 20:29:44'),
+(3, 3, 10, '2025-05-14 16:19:22');
 
 -- --------------------------------------------------------
 
@@ -90,17 +90,24 @@ CREATE TABLE `medications` (
   `medicationId` int(11) NOT NULL,
   `medicationName` varchar(45) NOT NULL,
   `dosage` varchar(45) NOT NULL,
-  `manufacturer` varchar(100) DEFAULT NULL
+  `manufacturer` varchar(100) DEFAULT NULL,
+  `quantityAvailable` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
 -- Dumping data for table `medications`
 --
 
-INSERT INTO `medications` (`medicationId`, `medicationName`, `dosage`, `manufacturer`) VALUES
-(1, 'Aspirin', '100mg', 'PharmaComp'),
-(2, 'Allergy Medicine', '10ml', 'MedicalLabs'),
-(3, 'Antibiotic', '250mg', 'HealthFirst');
+INSERT INTO `medications` (`medicationId`, `medicationName`, `dosage`, `manufacturer`, `quantityAvailable`) VALUES
+(1, 'Aspirin', '100mg', 'PharmaComp', 20),
+(2, 'Allergy Medicine', '10ml', 'MedicalLabs', 10),
+(3, 'Antibiotic', '250mg', 'HealthFirst', 50),
+(5, 'Vitamin C', '50mg', 'Natures Way', 50),
+(6, 'Ibuprohen', '500mg', 'Tylenol', 100),
+(7, 'Amoxilian', '500mg', 'Pharmacy Express', 100),
+(8, 'Benadryl', '50mg', 'Sol Pharmacy', 100),
+(12, 'Benadryl', '20mg', 'Sol Pharmacy', 50),
+(15, 'Mint', '20mg', 'Sol Pharmacy', 50);
 
 -- --------------------------------------------------------
 
@@ -125,7 +132,10 @@ CREATE TABLE `prescriptions` (
 INSERT INTO `prescriptions` (`prescriptionId`, `userId`, `medicationId`, `prescribedDate`, `dosageInstructions`, `quantity`, `refillCount`) VALUES
 (1, 1, 1, '2025-05-06 21:48:41', NULL, 5, 0),
 (2, 3, 2, '2025-05-06 21:48:41', NULL, 3, 0),
-(3, 1, 3, '2025-05-06 21:48:41', NULL, 2, 0);
+(3, 1, 3, '2025-05-06 21:48:41', NULL, 2, 0),
+(4, 1, 2, '2025-05-01 16:14:29', '', 25, 0),
+(7, 4, 5, '0000-00-00 00:00:00', '20mg', 50, 0),
+(8, 1, 2, '0000-00-00 00:00:00', '20mg', 20, 0);
 
 --
 -- Triggers `prescriptions`
@@ -173,17 +183,22 @@ CREATE TABLE `users` (
   `userId` int(11) NOT NULL,
   `userName` varchar(45) NOT NULL,
   `contactInfo` varchar(200) DEFAULT NULL,
-  `userType` enum('pharmacist','patient') DEFAULT NULL
+  `userType` enum('pharmacist','patient') DEFAULT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`userId`, `userName`, `contactInfo`, `userType`) VALUES
-(1, 'alex', 'alex@email.com', 'patient'),
-(2, 'rosa', 'rosa@email.com', 'pharmacist'),
-(3, 'carol', 'carol@email.com', 'patient');
+INSERT INTO `users` (`userId`, `userName`, `contactInfo`, `userType`, `password`, `email`) VALUES
+(1, 'alex', 'alex@email.com', 'patient', '1234', 'alex@patient.com'),
+(2, 'rosa', 'rosa@email.com', 'pharmacist', '1234', 'rosa@pharmacist.com'),
+(3, 'carol', 'carol@email.com', 'patient', '1234', NULL),
+(4, 'Celine', 'Celine@gmail.com', 'patient', '1234', NULL),
+(14, 'David', NULL, 'patient', '1234', NULL),
+(15, 'carina', NULL, 'patient', '1234', NULL);
 
 -- --------------------------------------------------------
 
@@ -203,13 +218,14 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 ALTER TABLE `inventory`
   ADD PRIMARY KEY (`inventoryId`),
-  ADD KEY `fk_inventory_medication` (`medicationId`);
+  ADD KEY `fk_medicationId` (`medicationId`);
 
 --
 -- Indexes for table `medications`
 --
 ALTER TABLE `medications`
-  ADD PRIMARY KEY (`medicationId`);
+  ADD PRIMARY KEY (`medicationId`),
+  ADD UNIQUE KEY `unique_medication` (`medicationName`,`dosage`,`manufacturer`);
 
 --
 -- Indexes for table `prescriptions`
@@ -246,13 +262,13 @@ ALTER TABLE `inventory`
 -- AUTO_INCREMENT for table `medications`
 --
 ALTER TABLE `medications`
-  MODIFY `medicationId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `medicationId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `prescriptions`
 --
 ALTER TABLE `prescriptions`
-  MODIFY `prescriptionId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `prescriptionId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `sales`
@@ -264,7 +280,7 @@ ALTER TABLE `sales`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `userId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `userId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- Constraints for dumped tables
@@ -274,7 +290,7 @@ ALTER TABLE `users`
 -- Constraints for table `inventory`
 --
 ALTER TABLE `inventory`
-  ADD CONSTRAINT `fk_inventory_medication` FOREIGN KEY (`medicationId`) REFERENCES `medications` (`medicationId`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_medicationId` FOREIGN KEY (`medicationId`) REFERENCES `medications` (`medicationId`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `prescriptions`
