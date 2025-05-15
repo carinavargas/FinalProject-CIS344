@@ -9,11 +9,11 @@ class PharmacyDatabase {
         $password = '';
 
         try {
-            // Initialize PDO 
+           
             $this->pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
-         
+            
             die("Database Connection Failed: " . $e->getMessage());
         }
     }
@@ -58,19 +58,9 @@ class PharmacyDatabase {
     }
 
     public function addMedication($medicationName, $dosage, $manufacturer, $quantityAvailable) {
-        $sql = "INSERT INTO medications (medicationName, dosage, manufacturer, quantityAvailable)
-                VALUES (?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE
-                    quantityAvailable = VALUES(quantityAvailable)";
-                    
-        $stmt = $this->pdo->prepare($sql);
+        $stmt = $this->pdo->prepare("INSERT INTO medications (medicationName, dosage, manufacturer, quantityAvailable) VALUES (?, ?, ?, ?)");
         return $stmt->execute([$medicationName, $dosage, $manufacturer, $quantityAvailable]);
     }
-    
-    
-    
-    
-    
 
     public function getMedicationInventory() {
         $stmt = $this->pdo->query("SELECT medicationName, dosage, manufacturer, quantityAvailable FROM medications");
@@ -90,16 +80,16 @@ class PharmacyDatabase {
         return true;
     }
 
-    public function getAllPrescriptions() {
-        $sql = "SELECT prescriptions.*, medications.medicationName, users.username 
-                FROM prescriptions 
-                JOIN medications ON prescriptions.medicationId = medications.medicationId
-                JOIN users ON prescriptions.userId = users.userId";  // Changed 'patientId' to 'userId'
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
+   public function getAllPrescriptions() {
+    $sql = "SELECT prescriptions.*, medications.medicationName, users.username 
+            FROM prescriptions 
+            JOIN medications ON prescriptions.medicationId = medications.medicationId
+            JOIN users ON prescriptions.userId = users.userId";  // Changed 'patientId' to 'userId'
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 
     public function getPrescriptionsByUser($userId) {
         $stmt = $this->pdo->prepare("
@@ -112,9 +102,5 @@ class PharmacyDatabase {
         $stmt->execute([':userId' => $userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-
-
-
-
-}    
+}
+?>
