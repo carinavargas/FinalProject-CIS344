@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once 'PharmacyDatabase.php';
 
 $db = new PharmacyDatabase();
@@ -50,5 +51,9 @@ $inventory = $db->getMedicationInventory();
     </footer>
 </body>
 </html>
+
+
+
+
 
 
