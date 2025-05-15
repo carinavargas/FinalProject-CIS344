@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once 'PharmacyDatabase.php';
 
 $message = '';
@@ -81,5 +80,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </footer>
 </body>
 </html>
-
-
