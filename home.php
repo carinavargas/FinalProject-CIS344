@@ -4,6 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once 'PharmacyDatabase.php';
 
+// Redirect to login if not authenticated
 if (!isset($_SESSION['userId'])) {
     header("Location: pharmacyServer.php?action=login");
     exit();
@@ -38,7 +39,6 @@ $userType = $_SESSION['userType'];
             <a href="pharmacyServer.php?action=addOrUpdateUser" class="nav-link">Add or Update User</a>
             <a href="pharmacyServer.php?action=viewInventory" class="nav-link">View Inventory</a>
             <a href="pharmacyServer.php?action=addMedication" class="nav-link">Add Medication</a>
-           
         <?php elseif ($userType === 'patient'): ?>
             <a href="pharmacyServer.php?action=viewPatientPrescriptions" class="nav-link">View My Prescriptions</a>
         <?php endif; ?>
